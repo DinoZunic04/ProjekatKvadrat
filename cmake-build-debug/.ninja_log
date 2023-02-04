@@ -1,0 +1,19 @@
+# ninja log v5
+636	828	6970526993264547	ProjekatKvadrat.exe	218fbfeca0b36617
+4	81	6970079701967917	CMakeFiles/ProjekatKvadrat.dir/Estimate/Estimate.cpp.obj	7ff25cabffb4bfe8
+3	588	6970526914939362	CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj	277c6e53d69bad97
+9	581	6970526914869349	CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj	25ba4efa953e89e0
+3	635	6970526991374110	CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj	202861323c807268
+2	196	6970703613536339	build.ninja	7de60539f5f1c9ac
+13	688	6972245471273181	CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj	25ba4efa953e89e0
+4	802	6972245472435408	CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj	202861323c807268
+9	882	6972245473215580	CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj	277c6e53d69bad97
+882	1211	6972245476488184	ProjekatKvadrat.exe	218fbfeca0b36617
+20	866	6972278210077892	CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj	25ba4efa953e89e0
+6	1093	6972278212352612	CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj	202861323c807268
+12	1203	6972278213435217	CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj	277c6e53d69bad97
+1203	1426	6972278215651119	ProjekatKvadrat.exe	218fbfeca0b36617
+12	470	6972280750357517	CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj	25ba4efa953e89e0
+4	639	6972280752048794	CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj	202861323c807268
+8	728	6972280752928988	CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj	277c6e53d69bad97
+728	895	6972280754569384	ProjekatKvadrat.exe	218fbfeca0b36617
