@@ -33,7 +33,7 @@ struct Term {
 };
 
 struct Numerical : public Term {
-    virtual size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const;
+    virtual size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const;
     virtual string toString() const override = 0;
 };
 
@@ -42,7 +42,7 @@ struct Constant : public Numerical {
 
     Constant(size_t value);
 
-    size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
@@ -51,7 +51,7 @@ struct Variable : public Numerical {
 
     Variable(size_t index);
 
-    size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
@@ -62,12 +62,12 @@ struct Operation : public Numerical {
 
     Operation(char symbol, Numerical *lhs, Numerical *rhs);
 
-    size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    size_t calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
 struct Boolean : public Term {
-    virtual byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const;
+    virtual byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const;
     virtual string toString() const override = 0;
 };
 
@@ -79,7 +79,7 @@ struct Relation : public Boolean{
 
     Relation(char symbol, Numerical *lhs, Numerical *rhs);
 
-    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
@@ -88,7 +88,7 @@ struct NotStatement : public Boolean {
 
     explicit NotStatement(Boolean *statement);
 
-    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
@@ -98,7 +98,7 @@ struct AndStatement : public Boolean {
 
     AndStatement(Boolean *lhs, Boolean *rhs);
 
-    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
@@ -110,7 +110,7 @@ struct ArrayIndex : public Boolean {
 
     ArrayIndex(size_t metaIndex, Numerical *index);
 
-    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    byte calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
     string toString() const override;
 };
 
@@ -120,7 +120,7 @@ struct SizeOfArray : public Numerical {
     SizeOfArray(size_t index);
 
     size_t
-    calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<bool>> &memory) const override;
+    calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const override;
 
     string toString() const override;
 };

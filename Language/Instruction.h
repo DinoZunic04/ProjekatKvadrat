@@ -7,7 +7,7 @@
 
 #include "Term.h"
 
-enum ResultType {
+enum Termination {
     EXIT,
     RETURN,
     BREAK,
@@ -15,20 +15,11 @@ enum ResultType {
     DEFAULT
 };
 
-struct Result {
-    ResultType type;
-    size_t value;
-
-    Result(ResultType type, size_t value = 0);
-    Result(size_t value);
-    operator ResultType() const;
-};
-
 string offset(size_t indentation);
 
 struct Instruction {
     virtual string toString(size_t indentation) const = 0;
-    virtual Result run(ProgramState& ps, vector<size_t>& variables, vector<vector<bool>>& memory) const;
+    virtual Termination run(ProgramState& ps, vector<size_t>& variables, vector<vector<byte> *> &memory) const;
 };
 
 struct DeclareVariable : public Instruction {
@@ -37,7 +28,7 @@ struct DeclareVariable : public Instruction {
     DeclareVariable(const Numerical *value);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 };
 
 struct NumericAssignment : public Instruction {
@@ -47,7 +38,7 @@ struct NumericAssignment : public Instruction {
     NumericAssignment(size_t index, const Numerical *value);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 };
 
 struct DeclareArray : public Instruction {
@@ -56,7 +47,7 @@ struct DeclareArray : public Instruction {
     DeclareArray(const Numerical *size);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 };
 
 struct BooleanAssignment : public Instruction {
@@ -67,38 +58,19 @@ struct BooleanAssignment : public Instruction {
     BooleanAssignment(size_t metaIndex, const Numerical *index, const Boolean *value);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
-};
-
-struct ContinueCommand : public Instruction {
-    string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
-};
-
-struct BreakCommand : public Instruction {
-    string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
-};
-
-struct ReturnCommand : public Instruction {
-    const Numerical* value;
-
-    ReturnCommand(const Numerical *value);
-
-    string toString(size_t indentation) const override;
-
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 };
 
 struct Block : public Instruction {
     vector<const Instruction*> instructions;
+    Termination termination;
 
-    Block(const vector<const Instruction*> &instructions);
+    Block(const vector<const Instruction *> &instructions, Termination termination);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 private:
-    static void clean(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory, size_t oldVariablesSize, const vector<size_t>& oldMemorySizes);
+    static void clean(ProgramState &ps, vector<vector<byte> *> &memory, const vector<size_t>& oldSizes);
 };
 
 struct IfElse : public Instruction {
@@ -109,7 +81,7 @@ struct IfElse : public Instruction {
     IfElse(const Boolean *condition, const Block* ifBlock, const Block* elseBlock);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 };
 
 struct While : public Instruction {
@@ -119,7 +91,33 @@ struct While : public Instruction {
     While(const Boolean *condition, const Block *block);
 
     string toString(size_t indentation) const override;
-    Result run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
 };
+
+struct Function {
+    string name;
+    size_t numOfParameters;
+    size_t numOfArrays;
+    const Block* block;
+
+    Function(const string &name, size_t numOfParameters, size_t numOfArrays, const Block *block);
+
+    string toString() const;
+};
+
+struct FunctionApplication : public Instruction {
+    const Function* function;
+    vector<size_t> parameters;
+    vector<size_t> arrayReferences;
+
+    FunctionApplication(const Function *function, const vector<size_t> &parameters,
+                        const vector<size_t> &arrayReferences);
+
+    string toString(size_t indentation) const override;
+
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
+};
+
+//todo add modifies and uses
 
 #endif //PROJEKATKVADRAT_INSTRUCTION_H

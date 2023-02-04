@@ -11,13 +11,7 @@ string offset(size_t indentation){
     return toReturn;
 }
 
-Result::Result(ResultType type, size_t value) : type(type), value(value) {}
-Result::Result(size_t value) : type(RETURN), value(value) {}
-Result::operator ResultType() const {
-    return type;
-}
-
-Result Instruction::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination Instruction::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(ps.timeCounter > ps.MAX_TIME || ps.memoryCounter > ps.MAX_MEMORY)
         return EXIT;
     ps.MAX_TIME++;
@@ -30,7 +24,7 @@ string DeclareVariable::toString(size_t indentation) const {
     return offset(indentation) + "decl " + value->toString();
 }
 
-Result DeclareVariable::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination DeclareVariable::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
     ps.memoryCounter++;
@@ -48,7 +42,7 @@ string NumericAssignment::toString(size_t indentation) const {
     return offset(indentation) + "x_" + std::to_string(index) + " = " + value->toString();
 }
 
-Result NumericAssignment::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination NumericAssignment::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
     if(index >= variables.size())
@@ -69,19 +63,19 @@ string BooleanAssignment::toString(size_t indentation) const {
     return offset(indentation) + "A_" + std::to_string(metaIndex) + "[" + index->toString() + "] = " + value->toString();
 }
 
-Result BooleanAssignment::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination BooleanAssignment::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
     if(metaIndex >= memory.size())
         return EXIT;
     size_t indexResult = index->calculate(ps, variables, memory);
-    if(indexResult>=memory[metaIndex].size())
+    if(indexResult>=memory[metaIndex]->size())
         return EXIT;
     byte valueResult = value->calculate(ps, variables, memory);
     if(valueResult == BOOL_ERROR)
         return EXIT;
 
-    memory[metaIndex][indexResult] = valueResult;
+    (*memory[metaIndex])[indexResult] = valueResult;
     return DEFAULT;
 }
 
@@ -91,7 +85,7 @@ string DeclareArray::toString(size_t indentation) const {
     return offset(indentation) + "declare["+size->toString()+"]";
 }
 
-Result DeclareArray::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination DeclareArray::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
     size_t sizeResult = size->calculate(ps, variables, memory);
@@ -100,88 +94,65 @@ Result DeclareArray::run(ProgramState &ps, vector<size_t> &variables, vector<vec
     if(ps.memoryCounter + sizeResult > ps.MAX_MEMORY)
         return EXIT;
 
-    memory.emplace_back(sizeResult);
+    memory.emplace_back(new vector<byte>(sizeResult));
     ps.memoryCounter+=sizeResult;
     return DEFAULT;
 }
 
-string ContinueCommand::toString(size_t indentation) const {
-    return offset(indentation) + "continue";
-}
-
-Result ContinueCommand::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
-    if(Instruction::run(ps, variables, memory) == EXIT)
-        return EXIT;
-    return CONTINUE;
-}
-
-string BreakCommand::toString(size_t indentation) const {
-    return offset(indentation) + "break";
-}
-
-Result BreakCommand::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
-    if(Instruction::run(ps, variables, memory) == EXIT)
-        return EXIT;
-    return BREAK;
-}
-
-ReturnCommand::ReturnCommand(const Numerical *value) : value(value) {}
-
-string ReturnCommand::toString(size_t indentation) const {
-    return offset(indentation) + "return " + value->toString();
-}
-
-Result ReturnCommand::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
-    if(Instruction::run(ps, variables, memory) == EXIT)
-        return EXIT;
-    size_t valueResult = value->calculate(ps, variables, memory);
-    if(valueResult == NUM_ERROR)
-        return EXIT;
-    return {RETURN, valueResult};
-}
-
-Block::Block(const vector<const Instruction*> &instructions) : instructions(instructions) {}
+Block::Block(const vector<const Instruction *> &instructions, Termination termination) : instructions(instructions),
+                                                                                         termination(termination) {}
 
 string Block::toString(size_t indentation) const {
     string toReturn;
     for(auto instruction:instructions)
         toReturn += instruction->toString(indentation) + '\n';
+    switch (termination) {
+        case EXIT:
+            toReturn += offset(indentation) + "exit\n";
+            break;
+        case RETURN:
+            toReturn += offset(indentation) + "return\n";
+            break;
+        case BREAK:
+            toReturn += offset(indentation) + "break\n";
+            break;
+        case CONTINUE:
+            toReturn += offset(indentation) + "continue\n";
+            break;
+    }
     return toReturn;
 }
 
-Result Block::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination Block::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
 
     //garbage collection
-    size_t oldVariablesSize = variables.size();
-    vector<size_t> oldMemorySizes(variables.size());
+    vector<size_t> oldSizes(variables.size());
     for(int i=0;i<variables.size();i++)
-        oldMemorySizes[i] = memory.size();
+        oldSizes[i] = memory.size();
 
     for(auto instruction : instructions) {
         auto result = instruction->run(ps, variables, memory);
         if(result != DEFAULT) {
-            clean(ps,variables,memory,oldVariablesSize,oldMemorySizes);
+            clean(ps,memory, oldSizes);
             return result;
         }
     }
-    clean(ps,variables,memory,oldVariablesSize,oldMemorySizes);
-    return DEFAULT;
+    clean(ps,memory,oldSizes);
+    return termination;
 }
 
-void Block::clean(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory, size_t oldVariablesSize,
-                  const vector<size_t> &oldMemorySizes) {
-    ps.memoryCounter -= variables.size() - oldVariablesSize;
-    variables.resize(oldVariablesSize);
-
-    for(int i=0;i<oldMemorySizes.size();i++){
-        ps.memoryCounter-=memory[i].size()-oldMemorySizes[i];
-        memory[i].resize(oldMemorySizes[i]);
+void Block::clean(ProgramState &ps, vector<vector<byte> *> &memory, const vector<size_t> &oldSizes) {
+    for(size_t i=0;i<oldSizes.size();i++){
+        ps.memoryCounter-=memory[i]->size()-oldSizes[i];
+        memory[i]->resize(oldSizes[i]);
     }
-    for(int i=oldMemorySizes.size();i<memory.size();i++)
-        ps.memoryCounter-=memory[i].size();
-    memory.resize(oldMemorySizes.size());
+    for(size_t i=oldSizes.size();i<memory.size();i++){
+        ps.memoryCounter-=memory[i]->size();
+        delete memory[i];
+    }
+    memory.resize(oldSizes.size());
 }
 
 
@@ -197,7 +168,7 @@ string IfElse::toString(size_t indentation) const {
             elseBlock->toString(indentation+1);
 }
 
-Result IfElse::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination IfElse::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
     byte conditionResult = condition->calculate(ps,variables,memory);
@@ -214,7 +185,7 @@ string While::toString(size_t indentation) const {
     return offset(indentation) + "while "+condition->toString()+":\n"+block->toString(indentation+1);
 }
 
-Result While::run(ProgramState &ps, vector<size_t> &variables, vector<vector<bool>> &memory) const {
+Termination While::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
     while(true){
@@ -231,4 +202,69 @@ Result While::run(ProgramState &ps, vector<size_t> &variables, vector<vector<boo
         return result;
     }
     return DEFAULT;
+}
+
+Function::Function(const string &name, size_t numOfParameters, size_t numOfArrays, const Block *block) : name(name),
+                                                                                                         numOfParameters(numOfParameters),
+                                                                                                         numOfArrays(numOfArrays),
+                                                                                                         block(block) {}
+
+string Function::toString() const {
+    string toReturn = name;
+    toReturn += "(";
+    if(numOfParameters)
+        toReturn += "x_" + std::to_string(0);
+    for(size_t i = 1;i<numOfParameters;i++)
+        toReturn += ", x_" + std::to_string(i);
+    if(numOfArrays){
+        string A0 = "A_" + std::to_string(0);
+        if(numOfParameters)
+            toReturn += ", ";
+        toReturn += A0;
+    }
+    for(size_t i = 1;i<numOfArrays;i++)
+        toReturn += ", A_" + std::to_string(i);
+    toReturn += "):\n";
+    toReturn += block->toString(1);
+    return toReturn;
+}
+
+FunctionApplication::FunctionApplication(const Function *function, const vector<size_t> &parameters,
+                                         const vector<size_t> &arrayReferences) : function(function),
+                                                                                  parameters(parameters),
+                                                                                  arrayReferences(arrayReferences) {}
+
+string FunctionApplication::toString(size_t indentation) const {
+    string toReturn = function->name;
+    toReturn += "(";
+    if(function->numOfParameters)
+        toReturn += "x_" + std::to_string(parameters[0]);
+    for(size_t i = 1;i<function->numOfParameters;i++)
+        toReturn += ", x_" + std::to_string(parameters[i]);
+    if(function->numOfArrays){
+        string A0 = "A_" + std::to_string(arrayReferences[0]);
+        if(function->numOfParameters)
+            toReturn += ", ";
+        toReturn += A0;
+    }
+    for(size_t i = 1;i<function->numOfArrays;i++)
+        toReturn += ", A_" + std::to_string(arrayReferences[i]);
+    toReturn += ");\n";
+    return toReturn;
+}
+
+Termination FunctionApplication::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
+    ps.timeCounter += variables.size() + memory.size();
+    if(Instruction::run(ps, variables, memory) == EXIT)
+        return EXIT;
+
+    vector<size_t> newVariables(parameters.size());
+    for(size_t i = 0;i<parameters.size();i++)
+        newVariables[i] = variables[parameters[i]];
+
+    vector<vector<byte> *> newArrays(arrayReferences.size());
+    for(size_t i = 0;i<arrayReferences.size();i++)
+        newArrays[i] = memory[arrayReferences[i]];
+
+    return function->block->run(ps,newVariables, newArrays);
 }
