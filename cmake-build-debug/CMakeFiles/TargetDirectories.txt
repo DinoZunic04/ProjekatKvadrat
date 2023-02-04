@@ -1,0 +1,3 @@
+C:/Users/Computer/CLionProjects/ProjekatKvadrat/cmake-build-debug/CMakeFiles/ProjekatKvadrat.dir
+C:/Users/Computer/CLionProjects/ProjekatKvadrat/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Computer/CLionProjects/ProjekatKvadrat/cmake-build-debug/CMakeFiles/rebuild_cache.dir
