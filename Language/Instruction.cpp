@@ -12,11 +12,13 @@ string offset(size_t indentation){
 }
 
 Termination Instruction::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
+    ps.timeCounter++;
     if(ps.timeCounter > ps.MAX_TIME || ps.memoryCounter > ps.MAX_MEMORY)
         return EXIT;
-    ps.MAX_TIME++;
     return DEFAULT;
 }
+
+Instruction::~Instruction() = default;
 
 DeclareVariable::DeclareVariable(const Numerical *value) : value(value) {}
 
@@ -25,9 +27,9 @@ string DeclareVariable::toString(size_t indentation) const {
 }
 
 Termination DeclareVariable::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
+    ps.memoryCounter+=4;
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
-    ps.memoryCounter++;
     size_t valueResult = value->calculate(ps, variables, memory);
     if(valueResult == NUM_ERROR)
         return EXIT;
@@ -39,7 +41,7 @@ Termination DeclareVariable::run(ProgramState &ps, vector<size_t> &variables, ve
 NumericAssignment::NumericAssignment(size_t index, const Numerical *value) : index(index), value(value) {}
 
 string NumericAssignment::toString(size_t indentation) const {
-    return offset(indentation) + "x_" + std::to_string(index) + " = " + value->toString();
+    return offset(indentation) + "x" + std::to_string(index) + " = " + value->toString();
 }
 
 Termination NumericAssignment::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
@@ -60,7 +62,7 @@ BooleanAssignment::BooleanAssignment(size_t metaIndex, const Numerical *index, c
                                                                                            index(index), value(value) {}
 
 string BooleanAssignment::toString(size_t indentation) const {
-    return offset(indentation) + "A_" + std::to_string(metaIndex) + "[" + index->toString() + "] = " + value->toString();
+    return offset(indentation) + "A" + std::to_string(metaIndex) + "[" + index->toString() + "] = " + value->toString();
 }
 
 Termination BooleanAssignment::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
@@ -91,11 +93,11 @@ Termination DeclareArray::run(ProgramState &ps, vector<size_t> &variables, vecto
     size_t sizeResult = size->calculate(ps, variables, memory);
     if(sizeResult == NUM_ERROR)
         return EXIT;
-    if(ps.memoryCounter + sizeResult > ps.MAX_MEMORY)
+    if(ps.memoryCounter + sizeResult + 8 > ps.MAX_MEMORY)
         return EXIT;
+    ps.memoryCounter += sizeResult + 8;
 
-    memory.emplace_back(new vector<byte>(sizeResult));
-    ps.memoryCounter+=sizeResult;
+    memory.push_back(new vector<byte>(sizeResult));
     return DEFAULT;
 }
 
@@ -127,7 +129,6 @@ Termination Block::run(ProgramState &ps, vector<size_t> &variables, vector<vecto
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
 
-    //garbage collection
     vector<size_t> oldSizes(variables.size());
     for(int i=0;i<variables.size();i++)
         oldSizes[i] = memory.size();
@@ -213,17 +214,17 @@ string Function::toString() const {
     string toReturn = name;
     toReturn += "(";
     if(numOfParameters)
-        toReturn += "x_" + std::to_string(0);
+        toReturn += "x" + std::to_string(0);
     for(size_t i = 1;i<numOfParameters;i++)
-        toReturn += ", x_" + std::to_string(i);
+        toReturn += ", x" + std::to_string(i);
     if(numOfArrays){
-        string A0 = "A_" + std::to_string(0);
+        string A0 = "A" + std::to_string(0);
         if(numOfParameters)
             toReturn += ", ";
         toReturn += A0;
     }
     for(size_t i = 1;i<numOfArrays;i++)
-        toReturn += ", A_" + std::to_string(i);
+        toReturn += ", A" + std::to_string(i);
     toReturn += "):\n";
     toReturn += block->toString(1);
     return toReturn;
@@ -238,23 +239,23 @@ string FunctionApplication::toString(size_t indentation) const {
     string toReturn = function->name;
     toReturn += "(";
     if(function->numOfParameters)
-        toReturn += "x_" + std::to_string(parameters[0]);
+        toReturn += "x" + std::to_string(parameters[0]);
     for(size_t i = 1;i<function->numOfParameters;i++)
-        toReturn += ", x_" + std::to_string(parameters[i]);
+        toReturn += ", x" + std::to_string(parameters[i]);
     if(function->numOfArrays){
-        string A0 = "A_" + std::to_string(arrayReferences[0]);
+        string A0 = "A" + std::to_string(arrayReferences[0]);
         if(function->numOfParameters)
             toReturn += ", ";
         toReturn += A0;
     }
     for(size_t i = 1;i<function->numOfArrays;i++)
-        toReturn += ", A_" + std::to_string(arrayReferences[i]);
+        toReturn += ", A" + std::to_string(arrayReferences[i]);
     toReturn += ");\n";
     return toReturn;
 }
 
 Termination FunctionApplication::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
-    ps.timeCounter += variables.size() + memory.size();
+    ps.memoryCounter += 4*variables.size() + 8*memory.size();
     if(Instruction::run(ps, variables, memory) == EXIT)
         return EXIT;
 
@@ -267,4 +268,52 @@ Termination FunctionApplication::run(ProgramState &ps, vector<size_t> &variables
         newArrays[i] = memory[arrayReferences[i]];
 
     return function->block->run(ps,newVariables, newArrays);
+}
+
+WriteNumerical::WriteNumerical(size_t index) : index(index) {}
+
+string WriteNumerical::toString(size_t indentation) const {
+    return offset(indentation) + "write x" + std::to_string(index);
+}
+
+Termination WriteNumerical::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
+    ps.memoryCounter+=4;
+    if(Instruction::run(ps, variables, memory) == EXIT)
+        return EXIT;
+    ps.outNumerical.push_back(variables[index]);
+    return DEFAULT;
+}
+
+Write::Write(size_t index) : index(index) {}
+
+string Write::toString(size_t indentation) const {
+    return offset(indentation) + "write A" + std::to_string(index);
+}
+
+Termination Write::run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const {
+    ps.memoryCounter+=memory[index]->size();
+    if(Instruction::run(ps, variables, memory) == EXIT)
+        return EXIT;
+    for (auto b : *memory[index])
+        ps.outBoolean.push_back(b);
+    return DEFAULT;
+}
+
+Program::Program(const Block *main, const vector<Function> &functions) : main(main), functions(functions) {}
+
+ProgramState Program::run(size_t MAX_MEMORY, size_t MAX_TIME) const {
+    ProgramState ps(MAX_MEMORY, MAX_TIME);
+    vector<size_t> variables;
+    vector<vector<byte> *> memory;
+    main->run(ps, variables, memory);
+    return ps;
+}
+
+string Program::toString() const {
+    string toReturn;
+    toReturn += "def main:\n";
+    toReturn += main->toString(1) + '\n';
+    for(const auto& f : functions)
+        toReturn += f.toString() + '\n';
+    return toReturn;
 }

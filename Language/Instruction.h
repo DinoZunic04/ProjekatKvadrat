@@ -20,6 +20,8 @@ string offset(size_t indentation);
 struct Instruction {
     virtual string toString(size_t indentation) const = 0;
     virtual Termination run(ProgramState& ps, vector<size_t>& variables, vector<vector<byte> *> &memory) const;
+
+    virtual ~Instruction();
 };
 
 struct DeclareVariable : public Instruction {
@@ -114,8 +116,35 @@ struct FunctionApplication : public Instruction {
                         const vector<size_t> &arrayReferences);
 
     string toString(size_t indentation) const override;
-
     Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
+};
+
+struct WriteNumerical : public Instruction {
+    size_t index;
+
+    WriteNumerical(size_t index);
+
+    string toString(size_t indentation) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
+};
+
+struct Write : public Instruction {
+    size_t index;
+
+    Write(size_t index);
+
+    string toString(size_t indentation) const override;
+    Termination run(ProgramState &ps, vector<size_t> &variables, vector<vector<byte> *> &memory) const override;
+};
+
+struct Program {
+    const Block* main;
+    vector<Function> functions;
+
+    Program(const Block *main, const vector<Function> &functions);
+    ProgramState run(size_t MAX_MEMORY, size_t MAX_TIME) const;
+
+    string toString() const;
 };
 
 //todo add modifies and uses

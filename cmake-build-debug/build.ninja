@@ -67,6 +67,12 @@ build CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj: CXX_COMPILER_
   OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir
   OBJECT_FILE_DIR = CMakeFiles\ProjekatKvadrat.dir\Language
 
+build CMakeFiles/ProjekatKvadrat.dir/Universe.cpp.obj: CXX_COMPILER__ProjekatKvadrat_Debug C$:/Users/Computer/CLionProjects/ProjekatKvadrat/Universe.cpp || cmake_object_order_depends_target_ProjekatKvadrat
+  DEP_FILE = CMakeFiles\ProjekatKvadrat.dir\Universe.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir
+  OBJECT_FILE_DIR = CMakeFiles\ProjekatKvadrat.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target ProjekatKvadrat
@@ -75,7 +81,7 @@ build CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj: CXX_COMPILER_
 #############################################
 # Link the executable ProjekatKvadrat.exe
 
-build ProjekatKvadrat.exe: CXX_EXECUTABLE_LINKER__ProjekatKvadrat_Debug CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj
+build ProjekatKvadrat.exe: CXX_EXECUTABLE_LINKER__ProjekatKvadrat_Debug CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Universe.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir

@@ -13,7 +13,20 @@ size_t Numerical::calculate(ProgramState &ps, const vector<size_t> &variables, c
     return 0;
 }
 
-Constant::Constant(size_t value) : value(value) {}
+Numerical::Numerical(const unordered_set<size_t> &occuringVariables, const unordered_set<size_t> &occuringArrays)
+        : occuringVariables(occuringVariables), occuringArrays(occuringArrays) {}
+
+const unordered_set<size_t> &Numerical::getOccuringVariables() const {
+    return occuringVariables;
+}
+
+const unordered_set<size_t> &Numerical::getOccuringArrays() const {
+    return occuringArrays;
+}
+
+Numerical::~Numerical() = default;
+
+Constant::Constant(size_t value) : Numerical({},{}), value(value) {}
 
 size_t Constant::calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const {
     if(Numerical::calculate(ps,variables,memory) == NUM_ERROR)
@@ -26,7 +39,7 @@ string Constant::toString() const {
     return std::to_string(value);
 }
 
-Variable::Variable(size_t index) : index(index) {}
+Variable::Variable(size_t index) : Numerical({index}, {}), index(index) {}
 
 size_t Variable::calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const {
     if(Numerical::calculate(ps,variables,memory) == NUM_ERROR)
@@ -38,10 +51,13 @@ size_t Variable::calculate(ProgramState &ps, const vector<size_t> &variables, co
 }
 
 string Variable::toString() const {
-    return "x_" + std::to_string(index);
+    return "x" + std::to_string(index);
 }
 
-Operation::Operation(char symbol, Numerical *lhs, Numerical *rhs) : symbol(symbol), lhs(lhs), rhs(rhs) {}
+Operation::Operation(char symbol, const Numerical *lhs, const Numerical *rhs) :
+        Numerical(unorderedUnion(lhs->getOccuringVariables(), rhs->getOccuringVariables()),
+                  unorderedUnion(lhs->getOccuringArrays(), rhs->getOccuringArrays())),
+        symbol(symbol), lhs(lhs), rhs(rhs) {}
 
 size_t Operation::calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const {
     if(Numerical::calculate(ps,variables,memory) == NUM_ERROR)
@@ -83,6 +99,23 @@ byte Boolean::calculate(ProgramState &ps, const vector<size_t> &variables, const
     ps.MAX_TIME++;
     return false;
 }
+
+SizeOfArray::SizeOfArray(size_t index) : Numerical({},{index}), index(index) {}
+
+size_t SizeOfArray::calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const {
+    if(Numerical::calculate(ps,variables,memory) == NUM_ERROR)
+        return NUM_ERROR;
+    if(index>=memory.size())
+        return NUM_ERROR;
+    return memory[index]->size();
+}
+
+string SizeOfArray::toString() const {
+    return "A" + std::to_string(index) + ".size";
+}
+
+Boolean::Boolean() = default;
+Boolean::~Boolean() = default;
 
 Relation::Relation(char symbol, Numerical *lhs, Numerical *rhs) : symbol(symbol), lhs(lhs), rhs(rhs) {}
 
@@ -159,19 +192,5 @@ byte ArrayIndex::calculate(ProgramState &ps, const vector<size_t> &variables, co
 }
 
 string ArrayIndex::toString() const {
-    return "A_" + std::to_string(metaIndex) + "[" + index->toString() + "]";
-}
-
-SizeOfArray::SizeOfArray(size_t index) : index(index) {}
-
-size_t SizeOfArray::calculate(ProgramState &ps, const vector<size_t> &variables, const vector<vector<byte> *> &memory) const {
-    if(Numerical::calculate(ps,variables,memory) == NUM_ERROR)
-        return NUM_ERROR;
-    if(index>=memory.size())
-        return NUM_ERROR;
-    return memory[index]->size();
-}
-
-string SizeOfArray::toString() const {
-    return "A_" + std::to_string(index) + ".size";
+    return "A" + std::to_string(metaIndex) + "[" + index->toString() + "]";
 }
