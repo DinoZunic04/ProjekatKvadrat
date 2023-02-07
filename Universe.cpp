@@ -46,20 +46,49 @@ void Universe::constructNumericals() {
         numericals[index + 1].push_back(new SizeOfArray(index));
 
     //operation
-    for(size_t c1 = 1; 1 +c1 < maxCost;c1++){
-        for(auto n1 : numericals[c1]){
-            auto o1 = dynamic_cast<const Operation*>(n1);
-            for(size_t c2 = 1; 1 + c1 + c2 < maxCost;c2++){
-                for(auto n2 : numericals[c2]){
+    for(size_t cost1 = 1; 2 + cost1 < maxCost; cost1++){
+        for(auto n1 : numericals[cost1]){
+            for(size_t cost2 = 1; 1 + cost1 + cost2 < maxCost; cost2++){
+                size_t cost = 1 + cost1 + cost2;
+                for(auto n2 : numericals[cost2]){
+                    auto o1 = dynamic_cast<const Operation*>(n1);
                     auto o2 = dynamic_cast<const Operation*>(n2);
-                    if(o1 == nullptr || o1->symbol != '-')
-                        numericals[1 + c1 + c2].push_back(new Operation('+', n1, n2));
+
+                    /*
+                    if(dynamic_cast<const Constant*>(n1) && dynamic_cast<const Constant*>(n2)){
+                        size_t result;
+                        ProgramState ps(100, 10);
+                        vector<size_t> variables;
+                        vector<vector<byte>*> memory;
+
+                        result = Operation('+', n1, n2).calculate(ps,variables,memory);
+                        if(result != NUM_ERROR)
+                            numericals[cost].push_back(new Constant(result));
+
+                        result = Operation('-', n1, n2).calculate(ps,variables,memory);
+                        if(result != NUM_ERROR)
+                            numericals[cost].push_back(new Constant(result));
+
+                        result = Operation('*', n1, n2).calculate(ps,variables,memory);
+                        if(result != NUM_ERROR)
+                            numericals[cost].push_back(new Constant(result));
+
+                        result = Operation('/', n1, n2).calculate(ps,variables,memory);
+                        if(result != NUM_ERROR)
+                            numericals[cost].push_back(new Constant(result));
+
+                        continue;
+                    }
+                     */
+
+                    if(cost2>=cost1 && (o1 == nullptr || o1->symbol != '-'))
+                        numericals[cost].push_back(new Operation('+', n1, n2));
                     if(o2 == nullptr || o2->symbol != '+')
-                        numericals[1 + c1 + c2].push_back(new Operation('-', n1, n2));
-                    if(o1 == nullptr || o1->symbol != '/')
-                        numericals[1 + c1 + c2].push_back(new Operation('*', n1, n2));
+                        numericals[cost].push_back(new Operation('-', n1, n2));
+                    if(cost2>=cost1 && (o1 == nullptr || o1->symbol != '/'))
+                        numericals[cost].push_back(new Operation('*', n1, n2));
                     if(o2 == nullptr || o2->symbol != '*')
-                        numericals[1 + c1 + c2].push_back(new Operation('/', n1, n2));
+                        numericals[cost].push_back(new Operation('/', n1, n2));
                 }
             }
         }
@@ -67,9 +96,9 @@ void Universe::constructNumericals() {
 
     numericals[1].push_back(new Constant(0));
 
-    //for (size_t i = 1;i<maxCost;i++)
-    //    std::cout<<"COST "<<i<<": "<<numericals[i].size()<<std::endl;
-
+    for (size_t i = 1;i<maxCost;i++)
+        std::cout<<"COST "<<i<<": "<<numericals[i].size()<<std::endl;
+/*
     for (size_t i = 1;i<maxCost;i++) {
         for (auto ptr: numericals[i]) {
             std::cout << ptr->toString() << " ( ";
@@ -77,6 +106,47 @@ void Universe::constructNumericals() {
             for(auto f : vars)
                 std::cout<<f<<" ";
             std::cout<<")\n";
+        }
+    }
+    */
+}
+
+//todo: dodati additive and multiplicative, ukloniti prosledjivanje promenljivih
+
+void Universe::constructBooleans() {
+    //array index
+    for(size_t index = 0;index + 2 < maxCost;index++){
+        for(size_t numCost = 1;index + 1 + numCost<maxCost;numCost++){
+            for(auto n1 : numericals[numCost]){
+                booleans[index + 1 + numCost].push_back(new ArrayIndex(index, n1));
+            }
+        }
+    }
+    //relation
+    for(size_t cost1 = 1; 2 + cost1 < maxCost; cost1++){
+        for(auto n1 : numericals[cost1]){
+            for(size_t cost2 = 1; 1 + cost1 + cost2 < maxCost; cost2++){
+                size_t cost = 1 + cost1 + cost2;
+                for(auto n2 : numericals[cost2]){
+                    booleans[cost].push_back(new Relation('=', n1, n2));
+                    booleans[cost].push_back(new Relation('<', n1, n2));
+                }
+            }
+        }
+    }
+    //and statement and not statement
+    for(size_t cost1 = 1; 1 + cost1 < maxCost; cost1++){
+        for(auto b1 : booleans[cost1]){
+            //not statement
+            booleans[1 + cost1].push_back(new NotStatement(b1));
+
+            //and is commutative, WLOG cost2 >= cost1
+            for(size_t cost2 = cost1; cost1 + cost2 < maxCost; cost2++){
+                size_t cost = cost1 + cost2;
+                for(auto b2 : booleans[cost2]){
+                    booleans[cost].push_back(new AndStatement(b1, b2));
+                }
+            }
         }
     }
 }

@@ -55,8 +55,8 @@ build CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj: CXX_COMPILER__ProjekatKvadrat
   OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir
   OBJECT_FILE_DIR = CMakeFiles\ProjekatKvadrat.dir
 
-build CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj: CXX_COMPILER__ProjekatKvadrat_Debug C$:/Users/Computer/CLionProjects/ProjekatKvadrat/Language/Term.cpp || cmake_object_order_depends_target_ProjekatKvadrat
-  DEP_FILE = CMakeFiles\ProjekatKvadrat.dir\Language\Term.cpp.obj.d
+build CMakeFiles/ProjekatKvadrat.dir/Language/Numerical.cpp.obj: CXX_COMPILER__ProjekatKvadrat_Debug C$:/Users/Computer/CLionProjects/ProjekatKvadrat/Language/Numerical.cpp || cmake_object_order_depends_target_ProjekatKvadrat
+  DEP_FILE = CMakeFiles\ProjekatKvadrat.dir\Language\Numerical.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir
   OBJECT_FILE_DIR = CMakeFiles\ProjekatKvadrat.dir\Language
@@ -73,6 +73,12 @@ build CMakeFiles/ProjekatKvadrat.dir/Universe.cpp.obj: CXX_COMPILER__ProjekatKva
   OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir
   OBJECT_FILE_DIR = CMakeFiles\ProjekatKvadrat.dir
 
+build CMakeFiles/ProjekatKvadrat.dir/Language/Boolean.cpp.obj: CXX_COMPILER__ProjekatKvadrat_Debug C$:/Users/Computer/CLionProjects/ProjekatKvadrat/Language/Boolean.cpp || cmake_object_order_depends_target_ProjekatKvadrat
+  DEP_FILE = CMakeFiles\ProjekatKvadrat.dir\Language\Boolean.cpp.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir
+  OBJECT_FILE_DIR = CMakeFiles\ProjekatKvadrat.dir\Language
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target ProjekatKvadrat
@@ -81,7 +87,7 @@ build CMakeFiles/ProjekatKvadrat.dir/Universe.cpp.obj: CXX_COMPILER__ProjekatKva
 #############################################
 # Link the executable ProjekatKvadrat.exe
 
-build ProjekatKvadrat.exe: CXX_EXECUTABLE_LINKER__ProjekatKvadrat_Debug CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Term.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Universe.cpp.obj
+build ProjekatKvadrat.exe: CXX_EXECUTABLE_LINKER__ProjekatKvadrat_Debug CMakeFiles/ProjekatKvadrat.dir/main.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Numerical.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Instruction.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Universe.cpp.obj CMakeFiles/ProjekatKvadrat.dir/Language/Boolean.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\ProjekatKvadrat.dir

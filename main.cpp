@@ -6,7 +6,7 @@ using std::endl;
 
 int main() {
 
-    Universe universe(8);
+    Universe universe(11);
     universe.constructNumericals();
     return 0;
 }

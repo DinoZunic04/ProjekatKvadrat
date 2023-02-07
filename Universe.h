@@ -22,6 +22,7 @@ public:
     void insertInstruction(const Instruction *instruction);
 
     void constructNumericals();
+    void constructBooleans();
     void constructInstructions();
 
     virtual ~Universe();

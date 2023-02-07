@@ -5,7 +5,7 @@
 #ifndef PROJEKATKVADRAT_INSTRUCTION_H
 #define PROJEKATKVADRAT_INSTRUCTION_H
 
-#include "Term.h"
+#include "Boolean.h"
 
 enum Termination {
     EXIT,
